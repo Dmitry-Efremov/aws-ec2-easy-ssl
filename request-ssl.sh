@@ -3,33 +3,44 @@
 # Requirement: `jq` and `awscli` packages
 
 if [ -z "$1" ]; then
-    echo "ERROR: DOMAIN is required."
-    exit 1
+
+  echo "ERROR: DOMAIN is required."
+  exit 1
 fi
 
 if [ -z "$2" ]; then
-    echo "ERROR: EMAIL is required."
-    exit 1
+
+  echo "ERROR: EMAIL is required."
+  exit 1
 fi
 
 if [ -z "$3" ]; then
-    echo "ERROR: S3 BUCKET URI is required. Ex: s3://cetificates"
-    exit 1
+
+  echo "ERROR: S3 BUCKET URI is required. Ex: s3://cetificates"
+  exit 1
 fi
 
 DOMAIN=$1
 EMAIL=$2
 S3_STORE=$3
 
+if [ -z "$AWS_ACCESS_KEY_ID" || -z $AWS_SECRET_ACCESS_KEY ]; then
 
-ROLE=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
-curl -s "http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE" > /tmp/aws.keys
-export AWS_ACCESS_KEY_ID=`cat /tmp/aws.keys | jq -j '.AccessKeyId'`
-export AWS_SECRET_ACCESS_KEY=`cat /tmp/aws.keys | jq -j '.SecretAccessKey'`
-export AWS_SESSION_TOKEN=`cat /tmp/aws.keys | jq -j '.Token'`
-rm /tmp/aws.keys
+  ROLE=`curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/`
+  curl -s "http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE" > /tmp/aws.keys
+
+  export AWS_ACCESS_KEY_ID=`cat /tmp/aws.keys | jq -j '.AccessKeyId'`
+  export AWS_SECRET_ACCESS_KEY=`cat /tmp/aws.keys | jq -j '.SecretAccessKey'`
+  export AWS_SESSION_TOKEN=`cat /tmp/aws.keys | jq -j '.Token'`
+
+  rm /tmp/aws.keys
+else
+
+  echo "AWS access keys found in current environment, will use them"
+fi
 
 if [ ! -d "$HOME/.acme.sh" ]; then
+
   # curl -s https://get.acme.sh | sh
   # https://github.com/Neilpang/acme.sh/issues/453
   git clone git@github.com:AntonTimiskov/acme.sh.git ~/.acme.sh
